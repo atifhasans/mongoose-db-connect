@@ -2,15 +2,21 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
-    const connectionInstance = await mongoose.connect(
-      `${process.env.MONGO_URI}todo`
-    );
-    console.log(
-      `\n MongoDB connected`
-    );
+    // Construct the URI safely
+    const uri = process.env.MONGO_URI.endsWith('/')
+      ? `${process.env.MONGO_URI}todo`
+      : `${process.env.MONGO_URI}/todo`;
+
+    // Connect to MongoDB
+    const connectionInstance = await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log(`\n MongoDB connected to database: ${connectionInstance.connection.name}`);
   } catch (error) {
-    console.log("MONGODB connection FAILED ", error);
-    process.exit(1);
+    console.error("MONGODB connection FAILED:", error.message);
+    process.exit(1); // Exit process with failure
   }
 };
 
