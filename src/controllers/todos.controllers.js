@@ -1,4 +1,5 @@
-import Todos from "../models/todos.models.js"; // Assuming this is your Mongoose model
+import Todos from "../models/todos.models.js"; 
+import mongoose from "mongoose"
 
 // Add a new Todo
 const addTodo = async (req, res) => {
