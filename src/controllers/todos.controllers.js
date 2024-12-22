@@ -1,78 +1,115 @@
-import Todos from "../models/todos.models.js"; 
 import mongoose from "mongoose"
+import Todos from "../models/todos.models.js"
 
-// Add a new Todo
 const addTodo = async (req, res) => {
-    try {
-        const todos = req.body; // Expecting an array of todos
-        if (!Array.isArray(todos)) {
-            return res.status(400).json({ message: "Input should be an array of todos." });
-        }
 
-        const createdTodos = await Todos.insertMany(todos); // Insert multiple todos
+    const { title, description } = req.body
+
+    if (!title || !description) return res.status(400).json({
+        message: 'title or description is required'
+    })
+
+    try {
+        const todo = await Todos.create({
+            title, description
+        })
+
         res.status(201).json({
-            message: "Todos added successfully",
-            data: createdTodos
-        });
+            message: 'todo added successfully',
+            data: todo
+        })
     } catch (error) {
         res.status(500).json({
-            message: "Error adding todos",
-            error: error.message
-        });
+            message: 'internal server error'
+        })
     }
-};
-
-// Get all Todos
+}
 const getAllTodo = async (req, res) => {
     try {
-        const todos = await Todos.find(); // Fetch all documents
-        res.status(200).json(todos);
+        const todos = await Todos.find({});
+        res.json({
+            data: todos
+        })
     } catch (error) {
-        res.status(500).json({ message: "Error fetching todos", error });
+        res.status(500).json({
+            message: 'internal server error'
+        })
     }
-};
-
-// Get a single Todo by ID
+}
 const getSingleTodo = async (req, res) => {
-    try {
-        const todo = await Todos.findById(req.params.id); // Fetch by ID
-        if (!todo) {
-            return res.status(404).json({ message: "Todo not found" });
-        }
-        res.status(200).json(todo);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching todo", error });
-    }
-};
+    const { id } = req.params;
 
-// Delete a Todo by ID
+    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ error: "Not valid Id" });
+
+    try {
+        const todo = await Todos.findById({ _id: id })
+
+        if (!todo) return res.status(404).json({
+            message: 'no todo found'
+        })
+        res.json({
+            data: todo
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: 'internal server error'
+        })
+    }
+
+
+}
 const deleteTodo = async (req, res) => {
-    try {
-        const deletedTodo = await Todos.findByIdAndDelete(req.params.id); // Delete by ID
-        if (!deletedTodo) {
-            return res.status(404).json({ message: "Todo not found" });
-        }
-        res.status(200).json({ message: "Todo deleted", deletedTodo });
-    } catch (error) {
-        res.status(500).json({ message: "Error deleting todo", error });
-    }
-};
+    const { id } = req.params;
 
-// Edit a Todo by ID
+    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ error: "Not valid Id" });
+
+    try {
+        const todo = await Todos.findByIdAndDelete({ _id: id })
+
+        if (!todo) return res.status(404).json({
+            message: 'no todo found!'
+        })
+
+        res.json({
+            message: 'todo deleted',
+            deleteTodo: todo
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: 'internal server error'
+        })
+    }
+
+
+}
 const editTodo = async (req, res) => {
-    try {
-        const updatedTodo = await Todos.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true, runValidators: true } // Return updated document and validate
-        );
-        if (!updatedTodo) {
-            return res.status(404).json({ message: "Todo not found" });
-        }
-        res.status(200).json(updatedTodo);
-    } catch (error) {
-        res.status(500).json({ message: "Error editing todo", error });
-    }
-};
+    const { id } = req.params;
 
-export { addTodo, getAllTodo, getSingleTodo, deleteTodo, editTodo };
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.json({ error: "Not a valid Id" });
+    }
+
+    try {
+        const todo = await Todos.findOneAndUpdate(
+            { _id: id },
+            {
+                ...req.body,
+            },
+            {new: true}
+        );
+
+        if (!todo) {
+            return res.status(404).json({ error: "Todo not found!" });
+        }
+
+        res.json(todo);
+    } catch (error) {
+        res.status(500).json({
+            message: 'internal server error'
+        })
+    }
+
+}
+
+
+export { addTodo, getAllTodo, getSingleTodo, deleteTodo, editTodo }
